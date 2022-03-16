@@ -108,3 +108,8 @@ venv.bak/
 data_loaders/
 data/
 default_models/
+
+*_models/
+*_results.csv
+*_workers_selected.csv
+defense_results.jpg

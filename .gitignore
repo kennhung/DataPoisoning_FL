@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+cvenv/
 
 # Spyder project settings
 .spyderproject
@@ -103,17 +104,16 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# mac OS
 .DS_Store
 
+# models
 data_loaders/
 data/
 default_models/
 
-# virtualenv
-cvenv/
+# vscode
+.devcontainer
 
-
-*_models/
-*_results.csv
-*_workers_selected.csv
-defense_results.jpg
+# arguments
+config.ini

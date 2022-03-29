@@ -108,3 +108,6 @@ venv.bak/
 data_loaders/
 data/
 default_models/
+
+# virtualenv
+cvenv/

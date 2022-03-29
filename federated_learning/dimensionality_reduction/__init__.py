@@ -1,1 +1,2 @@
 from .pca import calculate_pca_of_gradients
+from .kpca import calculate_kpca_of_gradients

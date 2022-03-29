@@ -11,25 +11,27 @@ from federated_learning.utils import get_worker_num_from_model_file_name
 from client import Client
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.datasets import make_blobs
+from sklearn.cluster import KMeans
 
 # Paths you need to put in.
-MODELS_PATH = "/absolute/path/to/models/folder/1823_models"
-EXP_INFO_PATH = "/absolute/path/to/log/file/1823.log"
+MODELS_PATH = "3000_models"
+EXP_INFO_PATH = "logs/3000.log"
 
 # The epochs over which you are calculating gradients.
-EPOCHS = list(range(10, 200))
+EPOCHS = list(range(1, 100))
 
 # The layer of the NNs that you want to investigate.
 #   If you are using the provided Fashion MNIST CNN, this should be "fc.weight"
 #   If you are using the provided Cifar 10 CNN, this should be "fc2.weight"
-LAYER_NAME = "fc2.weight"
+LAYER_NAME = "fc.weight"
 
 # The source class.
-CLASS_NUM = 4
+CLASS_NUM = 1
 
 # The IDs for the poisoned workers. This needs to be manually filled out.
 # You can find this information at the beginning of an experiment's log file.
-POISONED_WORKER_IDS = []
+POISONED_WORKER_IDS = [38, 20, 23, 3]
 
 # The resulting graph is saved to a file
 SAVE_NAME = "defense_results.jpg"
@@ -60,6 +62,20 @@ def plot_gradients_2d(gradients):
     plt.grid(False)
     plt.margins(0,0)
     plt.savefig(SAVE_NAME, bbox_inches='tight', pad_inches=0.1)
+
+def plot_kmeans_result(gradients):
+    fig = plt.figure()
+
+    kmeans = KMeans(n_clusters=2)
+    kmeans.fit(gradients)
+    y_kmeans = kmeans.predict(gradients)
+
+    plt.scatter(gradients[:, 0], gradients[:, 1], c=y_kmeans, s=180, cmap='viridis')
+
+    fig.set_size_inches(SAVE_SIZE, forward=False)
+    plt.grid(False)
+    plt.margins(0,0)
+    plt.savefig("kmeans_result.jpg", bbox_inches='tight', pad_inches=0.1)
 
 
 if __name__ == '__main__':
@@ -107,3 +123,4 @@ if __name__ == '__main__':
     logger.info("Dimensionally-reduced gradients shape: ({}, {})".format(len(dim_reduced_gradients), dim_reduced_gradients[0].shape[0]))
 
     plot_gradients_2d(zip(worker_ids, dim_reduced_gradients))
+    plot_kmeans_result(dim_reduced_gradients)

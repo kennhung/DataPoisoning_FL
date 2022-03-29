@@ -13,6 +13,7 @@ from federated_learning.utils import generate_experiment_ids
 from federated_learning.utils import convert_results_to_csv
 from client import Client
 
+
 def train_subset_of_clients(epoch, args, clients, poisoned_workers):
     """
     Train a subset of clients per round.
@@ -35,18 +36,22 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
         kwargs)
 
     for client_idx in random_workers:
-        args.get_logger().info("Training epoch #{} on client #{}", str(epoch), str(clients[client_idx].get_client_index()))
+        args.get_logger().info("Training epoch #{} on client #{}", str(
+            epoch), str(clients[client_idx].get_client_index()))
         clients[client_idx].train(epoch)
 
     args.get_logger().info("Averaging client parameters")
-    parameters = [clients[client_idx].get_nn_parameters() for client_idx in random_workers]
+    parameters = [clients[client_idx].get_nn_parameters()
+                  for client_idx in random_workers]
     new_nn_params = average_nn_parameters(parameters)
 
     for client in clients:
-        args.get_logger().info("Updating parameters on client #{}", str(client.get_client_index()))
+        args.get_logger().info("Updating parameters on client #{}",
+                               str(client.get_client_index()))
         client.update_nn_parameters(new_nn_params)
 
     return clients[0].test(), random_workers
+
 
 def create_clients(args, train_data_loaders, test_data_loader):
     """
@@ -54,9 +59,11 @@ def create_clients(args, train_data_loaders, test_data_loader):
     """
     clients = []
     for idx in range(args.get_num_workers()):
-        clients.append(Client(args, idx, train_data_loaders[idx], test_data_loader))
+        clients.append(
+            Client(args, idx, train_data_loaders[idx], test_data_loader))
 
     return clients
+
 
 def run_machine_learning(clients, args, poisoned_workers):
     """
@@ -65,15 +72,18 @@ def run_machine_learning(clients, args, poisoned_workers):
     epoch_test_set_results = []
     worker_selection = []
     for epoch in range(1, args.get_num_epochs() + 1):
-        results, workers_selected = train_subset_of_clients(epoch, args, clients, poisoned_workers)
+        results, workers_selected = train_subset_of_clients(
+            epoch, args, clients, poisoned_workers)
 
         epoch_test_set_results.append(results)
         worker_selection.append(workers_selected)
 
     return convert_results_to_csv(epoch_test_set_results), worker_selection
 
+
 def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_strategy, idx):
-    log_files, results_files, models_folders, worker_selections_files = generate_experiment_ids(idx, 1)
+    log_files, results_files, models_folders, worker_selections_files = generate_experiment_ids(
+        idx, 1)
 
     # Initialize logger
     handler = logger.add(log_files[0], enqueue=True)
@@ -89,18 +99,32 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     test_data_loader = load_test_data_loader(logger, args)
 
     # Distribute batches equal volume IID
-    distributed_train_dataset = distribute_batches_equally(train_data_loader, args.get_num_workers())
-    distributed_train_dataset = convert_distributed_data_into_numpy(distributed_train_dataset)
+    distributed_train_dataset = distribute_batches_equally(
+        train_data_loader, args.get_num_workers())
+    distributed_train_dataset = convert_distributed_data_into_numpy(
+        distributed_train_dataset)
 
-    poisoned_workers = identify_random_elements(args.get_num_workers(), args.get_num_poisoned_workers())
-    distributed_train_dataset = poison_data(logger, distributed_train_dataset, args.get_num_workers(), poisoned_workers, replacement_method)
+    poisoned_workers = identify_random_elements(
+        args.get_num_workers(), args.get_num_poisoned_workers())
+    distributed_train_dataset = poison_data(
+        logger, distributed_train_dataset, args.get_num_workers(), poisoned_workers, replacement_method)
 
-    train_data_loaders = generate_data_loaders_from_distributed_dataset(distributed_train_dataset, args.get_batch_size())
+    train_data_loaders = generate_data_loaders_from_distributed_dataset(
+        distributed_train_dataset, args.get_batch_size())
 
     clients = create_clients(args, train_data_loaders, test_data_loader)
 
-    results, worker_selection = run_machine_learning(clients, args, poisoned_workers)
+    results, worker_selection = run_machine_learning(
+        clients, args, poisoned_workers)
     save_results(results, results_files[0])
     save_results(worker_selection, worker_selections_files[0])
 
     logger.remove(handler)
+
+    return {
+        'poisoned_workers': poisoned_workers,
+        'log_files': log_files,
+        'results_files': results_files,
+        'models_folders': models_folders,
+        'worker_selections_files': worker_selections_files
+    }

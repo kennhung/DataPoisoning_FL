@@ -112,8 +112,8 @@ data_loaders/
 data/
 default_models/
 
+# exp outputs
+out/
+
 # vscode
 .devcontainer
-
-# arguments
-config.ini
